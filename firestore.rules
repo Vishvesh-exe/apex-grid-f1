@@ -1,0 +1,81 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation Blueprints
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'level', 'points', 'streak', 'nextRewardAt', 'badges']) &&
+             data.keys().size() == 6 &&
+             data.name is string && data.name.size() <= 64 &&
+             data.level is number &&
+             data.points is number &&
+             data.streak is number &&
+             data.nextRewardAt is number &&
+             data.badges is list && data.badges.size() <= 100;
+    }
+
+    function isValidPrediction(data) {
+      return data.keys().hasAll(['p1', 'p2', 'p3']) &&
+             data.keys().size() == 3 &&
+             data.p1 is string && data.p1.size() <= 64 &&
+             data.p2 is string && data.p2.size() <= 64 &&
+             data.p3 is string && data.p3.size() <= 64;
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUser(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'level', 'points', 'streak', 'nextRewardAt', 'badges'])
+      );
+      
+      match /predictions/{raceId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(raceId) && isValidPrediction(incoming());
+        allow update: if isOwner(userId) && isValidId(raceId) && isValidPrediction(incoming()) && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['p1', 'p2', 'p3'])
+        );
+      }
+    }
+
+    // Read-only public collections
+    match /drivers/{driverId} {
+      allow read: if isSignedIn();
+    }
+    
+    match /calendar/{raceId} {
+      allow read: if isSignedIn();
+    }
+    
+    match /news/{newsId} {
+      allow read: if isSignedIn();
+    }
+  }
+}

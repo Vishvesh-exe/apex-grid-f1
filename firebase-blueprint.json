@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile data",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "level": { "type": "number" },
+        "points": { "type": "number" },
+        "streak": { "type": "number" },
+        "nextRewardAt": { "type": "number" },
+        "badges": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["name", "level", "points", "streak", "nextRewardAt", "badges"]
+    },
+    "Prediction": {
+      "title": "Prediction",
+      "description": "User's race prediction",
+      "type": "object",
+      "properties": {
+        "p1": { "type": "string" },
+        "p2": { "type": "string" },
+        "p3": { "type": "string" }
+      },
+      "required": ["p1", "p2", "p3"]
+    },
+    "Driver": {
+      "title": "Driver",
+      "description": "F1 Driver",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "team": { "type": "string" },
+        "points": { "type": "number" },
+        "wins": { "type": "number" },
+        "podiums": { "type": "number" },
+        "number": { "type": "number" },
+        "image": { "type": "string" }
+      },
+      "required": ["name", "team", "points", "wins", "podiums", "number", "image"]
+    },
+    "Race": {
+      "title": "Race",
+      "description": "F1 Race",
+      "type": "object",
+      "properties": {
+        "round": { "type": "number" },
+        "name": { "type": "string" },
+        "Date": { "type": "string" },
+        "status": { "type": "string" },
+        "circuit": { "type": "string" }
+      },
+      "required": ["round", "name", "Date", "status", "circuit"]
+    },
+    "News": {
+      "title": "News",
+      "description": "F1 News",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "snippet": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["title", "snippet", "date"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles"
+    },
+    "/users/{userId}/predictions/{raceId}": {
+      "schema": { "$ref": "#/entities/Prediction" },
+      "description": "Stores user predictions for specific races"
+    },
+    "/drivers/{driverId}": {
+      "schema": { "$ref": "#/entities/Driver" },
+      "description": "Stores driver statistics"
+    },
+    "/calendar/{raceId}": {
+      "schema": { "$ref": "#/entities/Race" },
+      "description": "Stores race calendar"
+    },
+    "/news/{newsId}": {
+      "schema": { "$ref": "#/entities/News" },
+      "description": "Stores news"
+    }
+  }
+}
